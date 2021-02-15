@@ -1,0 +1,52 @@
+LanguageName = 'csharp'
+LanguageDisplayName = "C#"
+InstallInstructions = '''
+Using NuGet, install the dependency. Make sure you use the `OutputDirectory` that applies to your project.
+
+Via Package Management CLI:
+```
+PM> Install-Package Vexilla.Client
+```
+
+Or
+
+Via VS Package Management window:
+[https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio)
+
+Or
+
+Via NuGet CLI:
+```
+nuget install Vexilla.Client -OutputDirectory packages
+```
+
+
+'''
+CustomInstanceHash = "customInstanceHash"
+FetchFlags = "fetchFlags"
+SetupSnippet = '''
+```csharp
+VexillaHasher client = new VexillaClient(
+  'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
+  process.env.ENVIRONMENT,
+  userId
+).fetchFlags("features.json");
+```
+'''
+Should = "should"
+UsageSnippet = '''
+```csharp
+client.should(FEATURE_NAME);
+```
+'''
+Example = '''
+```csharp
+VexillaHasher client = new VexillaClient(
+  'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
+  process.env.ENVIRONMENT,
+  userId
+).fetchFlags("features.json");
+
+client.should(FEATURE_NAME);
+```
+'''
