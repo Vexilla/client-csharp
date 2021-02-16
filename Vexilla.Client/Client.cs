@@ -1,52 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-[assembly: InternalsVisibleTo("Vexilla.Client.Tests")]
 namespace Vexilla.Client
 {
 
-    enum VexillaFeatureType
+    public static class VexillaFeatureTypes
     {
-        toggle,
-        gradual,
-        selective,
+        public const string TOGGLE = "toggle";
+        public const string GRADUAL = "gradual";
     }
 
-    interface VexillaFeatureConfig
+    public class VexillaFlags
     {
-        string Type { get; }
-    }
-
-    interface VexillaToggleFeature: VexillaFeatureConfig
-    {
-
-        int Value { get; }
-
-    }
-
-    interface VexillaGradualFeature : VexillaFeatureConfig
-    {
-
-        int Value { get;  }
-
-        float Seed { get; }
-    }
-
-    interface VexillaSelectiveFeature : VexillaFeatureConfig
-    {
-    }
-
-    interface VexillaFeature : IDictionary<string, VexillaFeatureConfig> { }
-    interface VexillaFeatureSet : IDictionary<string, VexillaFeature> { }
-    interface VexillaEnvironment : IDictionary<string, VexillaFeatureSet> { }
-
-    interface VexillaConfig
-    {
-        Dictionary<string, VexillaEnvironment> Environments { get; }
+        public Dictionary<string, Dictionary<string, Dictionary<string, JObject>>> environments { get; set; }
     }
 
     public class VexillaClient
@@ -54,38 +24,73 @@ namespace Vexilla.Client
         private string baseUrl;
         private string environment;
         private string customInstanceHash;
+        private HttpClient client;
 
-        private VexillaConfig flags;
+        private JObject flags;
 
-        public VexillaClient(string baseUrl, string environment, string customInstanceHash)
+        public VexillaClient(string baseUrl, string environment, string customInstanceHash, HttpClient client)
         {
             this.baseUrl = baseUrl;
             this.environment = environment;
             this.customInstanceHash = customInstanceHash;
+            this.client = client;
         }
 
-        public async Task fetchFlags(string fileName)
+        public async Task<string> fetchString()
+        {
+            var result = await client.GetAsync(baseUrl + "/features.json");
+            var content = await result.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine(content);
+            return content;
+        }
+
+        public async Task<JObject> fetchFlags(string fileName)
         {
             // fetch json
-            var client = new HttpClient();
             var result = await client.GetAsync(
-                baseUrl + "/" + fileName+ ".json"
+                baseUrl + "/" + fileName
             );
-            System.Diagnostics.Debug.WriteLine(result.Content.ToString());
+
+            Console.Write("BAAAAR");
+
+            System.Diagnostics.Debug.WriteLine("FOOOOOOO");
+            var content = await result.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine(content);
 
             // parse json
-            VexillaConfig config  = JsonConvert.DeserializeObject<VexillaConfig>(result.Content.ToString());
+            //VexillaFlags config = JsonConvert.DeserializeObject<VexillaFlags>(content);
 
-            // set as flags
-            this.flags = config;
+            JObject config = JObject.Parse(content);
 
-
-
+            return config;
         }
 
+        public void setFlags(JObject flags)
+        {
+            this.flags = flags;
+        }
 
+        public bool should(string featureName) {
 
-        public bool should() {
+            JObject environments = flags.GetValue("environments").Value<JObject>();
+            JObject environment = environments.GetValue(this.environment).Value<JObject>();
+            JObject featureSet = environment.GetValue("untagged").Value<JObject>();
+            JObject feature = featureSet.GetValue(featureName).Value<JObject>();
+
+            string featureType = feature.GetValue("type").Value<string>();
+
+            if(featureType == VexillaFeatureTypes.TOGGLE)
+            {
+                return feature.GetValue("value").Value<bool>();
+            } else if(featureType == VexillaFeatureTypes.GRADUAL)
+            {
+                int value = feature.GetValue("value").Value<int>();
+                float seed = feature.GetValue("seed").Value<float>();
+                VexillaHasher hasher = new VexillaHasher(seed);
+
+                return hasher.hashString(customInstanceHash) < value;
+            }
+
             return false;
         }
     }
