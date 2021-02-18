@@ -5,6 +5,7 @@
     <IsTestProject>false</IsTestProject>
     <Version>0.0.1</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <ReleaseVersion>0.0.2</ReleaseVersion>
   </PropertyGroup>
 
   <ItemGroup>

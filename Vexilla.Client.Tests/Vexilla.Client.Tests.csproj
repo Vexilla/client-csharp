@@ -7,6 +7,7 @@
     <RootNamespace>Vexilla.Client.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <ReleaseVersion>0.0.2</ReleaseVersion>
   </PropertyGroup>
 
   <ItemGroup>
