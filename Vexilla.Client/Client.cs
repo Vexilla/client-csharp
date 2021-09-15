@@ -19,58 +19,56 @@ namespace Vexilla.Client
         public Dictionary<string, Dictionary<string, Dictionary<string, JObject>>> environments { get; set; }
     }
 
-    public class VexillaClient
+    public class VexillaClientBase
     {
-        private string baseUrl;
-        private string environment;
-        private string customInstanceHash;
-        private HttpClient client;
+        protected string baseUrl;
+        protected string environment;
+        protected string customInstanceHash;
 
-        private JObject flags;
+        protected JObject flags;
 
-        public VexillaClient(string baseUrl, string environment, string customInstanceHash, HttpClient client)
+        public VexillaClientBase(string baseUrl, string environment, string customInstanceHash)
         {
             this.baseUrl = baseUrl;
             this.environment = environment;
             this.customInstanceHash = customInstanceHash;
-            this.client = client;
         }
 
-        public async Task<string> fetchString()
+        public virtual async Task<string> FetchString(Func<string, string, Task<string>> finishedCallback)
         {
+
+            //var result = await finishedCallback(baseUrl, fileName);
+            var client = new HttpClient();
             var result = await client.GetAsync(baseUrl + "/features.json");
             var content = await result.Content.ReadAsStringAsync();
-            System.Diagnostics.Debug.WriteLine(content);
             return content;
         }
 
-        public async Task<JObject> fetchFlags(string fileName)
+
+        public virtual async Task<JObject> FetchFlags(string fileName, HttpClient httpClient)
         {
-            // fetch json
-            var result = await client.GetAsync(
-                baseUrl + "/" + fileName
+            var result = await httpClient.GetAsync(
+               baseUrl + "/" + fileName
             );
-
-            Console.Write("BAAAAR");
-
-            System.Diagnostics.Debug.WriteLine("FOOOOOOO");
             var content = await result.Content.ReadAsStringAsync();
-            System.Diagnostics.Debug.WriteLine(content);
-
-            // parse json
-            //VexillaFlags config = JsonConvert.DeserializeObject<VexillaFlags>(content);
-
-            JObject config = JObject.Parse(content);
+            var config = JObject.Parse(content);
 
             return config;
         }
 
-        public void setFlags(JObject flags)
+        public virtual async Task<JObject> FetchFlags(string fileName, Func<string, string, Task<JObject>> finishedCallback)
+        {
+            // fetch json
+            var result = await finishedCallback(baseUrl, fileName);
+            return result;
+        }
+
+        public virtual void setFlags(JObject flags)
         {
             this.flags = flags;
         }
 
-        public bool should(string featureName) {
+        public virtual bool should(string featureName) {
 
             JObject environments = flags.GetValue("environments").Value<JObject>();
             JObject environment = environments.GetValue(this.environment).Value<JObject>();
@@ -86,7 +84,7 @@ namespace Vexilla.Client
             {
                 int value = feature.GetValue("value").Value<int>();
                 float seed = feature.GetValue("seed").Value<float>();
-                VexillaHasher hasher = new VexillaHasher(seed);
+                var hasher = new VexillaHasher(seed);
 
                 return hasher.hashString(customInstanceHash) < value;
             }
@@ -95,3 +93,4 @@ namespace Vexilla.Client
         }
     }
 }
+

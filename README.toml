@@ -23,30 +23,36 @@ nuget install Vexilla.Client -OutputDirectory packages
 
 '''
 CustomInstanceHash = "customInstanceHash"
-FetchFlags = "fetchFlags"
+FetchFlags = "FetchFlags"
 SetupSnippet = '''
 ```csharp
+var httpClient = new HttpClient()
 VexillaHasher client = new VexillaClient(
   'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
   process.env.ENVIRONMENT,
   userId
-).fetchFlags("features.json");
+)
+
+let flags = await client.FetchFlags("features.json", httpClient);
 ```
 '''
-Should = "should"
+Should = "Should"
 UsageSnippet = '''
 ```csharp
-client.should(FEATURE_NAME);
+client.Should(FEATURE_NAME);
 ```
 '''
 Example = '''
 ```csharp
-VexillaHasher client = new VexillaClient(
+var httpClient = new HttpClient()
+var client = new VexillaClient(
   'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
   process.env.ENVIRONMENT,
   userId
-).fetchFlags("features.json");
+)
+var flags = FetchFlags("features.json", httpClient);
+client.SetFlags(flags)
 
-client.should(FEATURE_NAME);
+var useIsAllowed = client.Should(FEATURE_NAME);
 ```
 '''

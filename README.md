@@ -11,6 +11,7 @@ To get started is easy.
 Using NuGet, install the dependency. Make sure you use the `OutputDirectory` that applies to your project.
 
 Via Package Management CLI:
+
 ```
 PM> Install-Package Vexilla.Client
 ```
@@ -23,49 +24,50 @@ Via VS Package Management window:
 Or
 
 Via NuGet CLI:
+
 ```
 nuget install Vexilla.Client -OutputDirectory packages
 ```
-
-
-
 
 ### Setup
 
 You will need to create a Client within your app. This optionally takes in the `customInstanceHash` for use with gradual rollout.
 
-After creation, call `fetchFlags`. This can be chained from the constructor since it returns the client instance.
+After creation, call `FetchFlags`. This can be chained from the constructor since it returns the client instance.
 
 ```csharp
+var httpClient = new HttpClient()
 VexillaHasher client = new VexillaClient(
   'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
   process.env.ENVIRONMENT,
   userId
-).fetchFlags("features.json");
-```
+);
 
+var flags = await client.FetchFlags("features.json", httpClient);
+```
 
 ### Usage
 
 Use the created client to check if a feature `should` be on.
 
 ```csharp
-client.should(FEATURE_NAME);
+client.Should(FEATURE_NAME);
 ```
-
 
 ### Full Example
 
 ```csharp
-VexillaHasher client = new VexillaClient(
+var httpClient = new HttpClient();
+var client = new VexillaClient(
   'https://BUCKET_NAME.s3-website-AWS_REGION.amazonaws.com',
   process.env.ENVIRONMENT,
   userId
-).fetchFlags("features.json");
+);
+var flags = FetchFlags("features.json", httpClient);
+client.SetFlags(flags);
 
-client.should(FEATURE_NAME);
+var useIsAllowed = client.Should(FEATURE_NAME);
 ```
-
 
 ## What are Feature Flags?
 
